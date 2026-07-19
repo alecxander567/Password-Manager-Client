@@ -1,11 +1,8 @@
 import { useState, useRef } from "react";
 import { useAuth } from "../hooks/AuthContext";
-import {
-  updateUserProfile,
-  changePassword,
-  deleteAccount,
-} from "../api/auth";
+import { updateUserProfile, changePassword, deleteAccount } from "../api/auth";
 import { useNavigate } from "react-router-dom";
+import CategoriesSection from "../components/CategoriesSection";
 import {
   FiLock,
   FiUser,
@@ -15,6 +12,7 @@ import {
   FiCamera,
   FiSave,
   FiX,
+  FiTag,
 } from "react-icons/fi";
 
 export default function Dashboard() {
@@ -138,10 +136,12 @@ export default function Dashboard() {
     navigate("/login");
   };
 
-  const defaultPic = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Crect width='80' height='80' rx='40' fill='%23374151'/%3E%3Ctext x='40' y='44' text-anchor='middle' fill='%239ca3af' font-size='28' font-family='Arial' dy='.35em'%3E%3F%3C/text%3E%3C/svg%3E";
+  const defaultPic =
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Crect width='80' height='80' rx='40' fill='%23374151'/%3E%3Ctext x='40' y='44' text-anchor='middle' fill='%239ca3af' font-size='28' font-family='Arial' dy='.35em'%3E%3F%3C/text%3E%3C/svg%3E";
 
   const navItems = [
     { key: "profile", label: "Profile", icon: FiUser },
+    { key: "categories", label: "Categories", icon: FiTag },
     { key: "security", label: "Security", icon: FiShield },
     { key: "danger", label: "Danger Zone", icon: FiAlertTriangle },
   ];
@@ -159,8 +159,7 @@ export default function Dashboard() {
           </div>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2 px-4 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition cursor-pointer"
-          >
+            className="flex items-center gap-2 px-4 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition cursor-pointer">
             <FiLogOut className="w-4 h-4" />
             Sign Out
           </button>
@@ -186,11 +185,10 @@ export default function Dashboard() {
                   key={item.key}
                   onClick={() => setSection(item.key)}
                   className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition cursor-pointer ${
-                    section === item.key
-                      ? "bg-cyan-600/20 text-cyan-400 border border-cyan-800/50"
-                      : "text-gray-400 hover:text-white hover:bg-gray-800/50"
-                  }`}
-                >
+                    section === item.key ?
+                      "bg-cyan-600/20 text-cyan-400 border border-cyan-800/50"
+                    : "text-gray-400 hover:text-white hover:bg-gray-800/50"
+                  }`}>
                   <Icon className="w-4 h-4" />
                   {item.label}
                 </button>
@@ -203,14 +201,11 @@ export default function Dashboard() {
             {section === "profile" && (
               <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
                 <div className="flex items-start justify-between mb-6">
-                  <h2 className="text-xl font-semibold text-white">
-                    Profile
-                  </h2>
+                  <h2 className="text-xl font-semibold text-white">Profile</h2>
                   {!editing && (
                     <button
                       onClick={startEditing}
-                      className="px-4 py-1.5 text-sm bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg transition cursor-pointer"
-                    >
+                      className="px-4 py-1.5 text-sm bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg transition cursor-pointer">
                       Edit
                     </button>
                   )}
@@ -221,11 +216,11 @@ export default function Dashboard() {
                   <div className="relative w-20 h-20 rounded-full overflow-hidden bg-gray-800 ring-2 ring-gray-700">
                     <img
                       src={
-                        user?.profile_picture
-                          ? user.profile_picture.startsWith("http")
-                            ? user.profile_picture
-                            : `http://127.0.0.1:8000${user.profile_picture}`
-                          : defaultPic
+                        user?.profile_picture ?
+                          user.profile_picture.startsWith("http") ?
+                            user.profile_picture
+                          : `http://127.0.0.1:8000${user.profile_picture}`
+                        : defaultPic
                       }
                       alt=""
                       className="w-full h-full object-cover"
@@ -238,8 +233,7 @@ export default function Dashboard() {
                     <p className="text-xs text-gray-500">{user?.email}</p>
                     <button
                       onClick={() => fileRef.current?.click()}
-                      className="mt-2 flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-300 transition cursor-pointer"
-                    >
+                      className="mt-2 flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-300 transition cursor-pointer">
                       <FiCamera className="w-3.5 h-3.5" />
                       Change picture
                     </button>
@@ -264,7 +258,7 @@ export default function Dashboard() {
                   </div>
                 )}
 
-                {editing ? (
+                {editing ?
                   <form onSubmit={handleProfileUpdate} className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-300 mb-1.5">
@@ -293,23 +287,20 @@ export default function Dashboard() {
                     <div className="flex gap-3">
                       <button
                         type="submit"
-                        className="flex items-center gap-2 px-5 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-medium rounded-lg transition cursor-pointer"
-                      >
+                        className="flex items-center gap-2 px-5 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-medium rounded-lg transition cursor-pointer">
                         <FiSave className="w-4 h-4" />
                         Save
                       </button>
                       <button
                         type="button"
                         onClick={() => setEditing(false)}
-                        className="flex items-center gap-2 px-5 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm rounded-lg transition cursor-pointer"
-                      >
+                        className="flex items-center gap-2 px-5 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm rounded-lg transition cursor-pointer">
                         <FiX className="w-4 h-4" />
                         Cancel
                       </button>
                     </div>
                   </form>
-                ) : (
-                  <div className="space-y-4">
+                : <div className="space-y-4">
                     <div>
                       <p className="text-xs text-gray-500 uppercase tracking-wider">
                         Username
@@ -322,9 +313,7 @@ export default function Dashboard() {
                       <p className="text-xs text-gray-500 uppercase tracking-wider">
                         Email
                       </p>
-                      <p className="text-white mt-0.5">
-                        {user?.email || "—"}
-                      </p>
+                      <p className="text-white mt-0.5">{user?.email || "—"}</p>
                     </div>
                     <div>
                       <p className="text-xs text-gray-500 uppercase tracking-wider">
@@ -339,22 +328,24 @@ export default function Dashboard() {
                         Member since
                       </p>
                       <p className="text-gray-300 mt-0.5 text-sm">
-                        {user?.created_at
-                          ? new Date(user.created_at).toLocaleDateString(
-                              "en-US",
-                              {
-                                year: "numeric",
-                                month: "long",
-                                day: "numeric",
-                              }
-                            )
-                          : "—"}
+                        {user?.created_at ?
+                          new Date(user.created_at).toLocaleDateString(
+                            "en-US",
+                            {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            },
+                          )
+                        : "—"}
                       </p>
                     </div>
                   </div>
-                )}
+                }
               </div>
             )}
+
+            {section === "categories" && <CategoriesSection section={section} />}
 
             {section === "security" && (
               <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
@@ -390,9 +381,9 @@ export default function Dashboard() {
                       }
                       required
                       className={`w-full px-4 py-2.5 bg-gray-800 border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition ${
-                        pwErrors.old_password
-                          ? "border-red-700"
-                          : "border-gray-700"
+                        pwErrors.old_password ? "border-red-700" : (
+                          "border-gray-700"
+                        )
                       }`}
                     />
                     {pwErrors.old_password && (
@@ -417,9 +408,9 @@ export default function Dashboard() {
                       }
                       required
                       className={`w-full px-4 py-2.5 bg-gray-800 border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition ${
-                        pwErrors.new_password
-                          ? "border-red-700"
-                          : "border-gray-700"
+                        pwErrors.new_password ? "border-red-700" : (
+                          "border-gray-700"
+                        )
                       }`}
                     />
                     {pwErrors.new_password && (
@@ -444,9 +435,9 @@ export default function Dashboard() {
                       }
                       required
                       className={`w-full px-4 py-2.5 bg-gray-800 border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition ${
-                        pwErrors.new_password2
-                          ? "border-red-700"
-                          : "border-gray-700"
+                        pwErrors.new_password2 ? "border-red-700" : (
+                          "border-gray-700"
+                        )
                       }`}
                     />
                     {pwErrors.new_password2 && (
@@ -457,8 +448,7 @@ export default function Dashboard() {
                   </div>
                   <button
                     type="submit"
-                    className="px-5 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-medium rounded-lg transition cursor-pointer"
-                  >
+                    className="px-5 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-medium rounded-lg transition cursor-pointer">
                     Update Password
                   </button>
                 </form>
@@ -475,16 +465,14 @@ export default function Dashboard() {
                   be certain.
                 </p>
 
-                {!confirmDelete ? (
+                {!confirmDelete ?
                   <button
                     onClick={() => setConfirmDelete(true)}
-                    className="flex items-center gap-2 px-5 py-2 bg-red-700 hover:bg-red-600 text-white text-sm font-medium rounded-lg transition cursor-pointer"
-                  >
+                    className="flex items-center gap-2 px-5 py-2 bg-red-700 hover:bg-red-600 text-white text-sm font-medium rounded-lg transition cursor-pointer">
                     <FiAlertTriangle className="w-4 h-4" />
                     Delete Account
                   </button>
-                ) : (
-                  <div className="space-y-4">
+                : <div className="space-y-4">
                     <p className="text-red-300 text-sm">
                       Are you absolutely sure? This action cannot be undone.
                     </p>
@@ -492,19 +480,17 @@ export default function Dashboard() {
                       <button
                         onClick={handleDeleteAccount}
                         disabled={deleting}
-                        className="px-5 py-2 bg-red-700 hover:bg-red-600 disabled:bg-red-800 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition cursor-pointer"
-                      >
+                        className="px-5 py-2 bg-red-700 hover:bg-red-600 disabled:bg-red-800 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition cursor-pointer">
                         {deleting ? "Deleting …" : "Yes, delete my account"}
                       </button>
                       <button
                         onClick={() => setConfirmDelete(false)}
-                        className="px-5 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm rounded-lg transition cursor-pointer"
-                      >
+                        className="px-5 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm rounded-lg transition cursor-pointer">
                         Cancel
                       </button>
                     </div>
                   </div>
-                )}
+                }
               </div>
             )}
           </div>
