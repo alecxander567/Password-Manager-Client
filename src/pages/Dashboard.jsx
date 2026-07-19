@@ -3,16 +3,14 @@ import { useAuth } from "../hooks/AuthContext";
 import { updateUserProfile, changePassword, deleteAccount } from "../api/auth";
 import { useNavigate } from "react-router-dom";
 import CategoriesSection from "../components/CategoriesSection";
+import Sidebar from "../components/Sidebar";
 import {
   FiLock,
-  FiUser,
-  FiShield,
   FiAlertTriangle,
   FiLogOut,
   FiCamera,
   FiSave,
   FiX,
-  FiTag,
 } from "react-icons/fi";
 
 export default function Dashboard() {
@@ -139,13 +137,6 @@ export default function Dashboard() {
   const defaultPic =
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Crect width='80' height='80' rx='40' fill='%23374151'/%3E%3Ctext x='40' y='44' text-anchor='middle' fill='%239ca3af' font-size='28' font-family='Arial' dy='.35em'%3E%3F%3C/text%3E%3C/svg%3E";
 
-  const navItems = [
-    { key: "profile", label: "Profile", icon: FiUser },
-    { key: "categories", label: "Categories", icon: FiTag },
-    { key: "security", label: "Security", icon: FiShield },
-    { key: "danger", label: "Danger Zone", icon: FiAlertTriangle },
-  ];
-
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100">
       {/* Top bar */}
@@ -177,24 +168,7 @@ export default function Dashboard() {
 
         <div className="grid lg:grid-cols-[220px_1fr] gap-8">
           {/* Sidebar nav */}
-          <nav className="space-y-1">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <button
-                  key={item.key}
-                  onClick={() => setSection(item.key)}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition cursor-pointer ${
-                    section === item.key ?
-                      "bg-cyan-600/20 text-cyan-400 border border-cyan-800/50"
-                    : "text-gray-400 hover:text-white hover:bg-gray-800/50"
-                  }`}>
-                  <Icon className="w-4 h-4" />
-                  {item.label}
-                </button>
-              );
-            })}
-          </nav>
+          <Sidebar activeSection={section} onSectionChange={setSection} />
 
           {/* Main content */}
           <div>
