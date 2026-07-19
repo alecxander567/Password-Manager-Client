@@ -19,3 +19,7 @@ export const updateCategory = (id, categoryData) => {
 export const deleteCategory = (id) => {
   return axiosInstance.delete(`/api/categories/${id}/`);
 };
+
+export const seedCategories = () => {
+  return axiosInstance.post("/api/categories/seed/");
+};

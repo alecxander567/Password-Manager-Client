@@ -4,6 +4,7 @@ import {
   createCategory,
   updateCategory,
   deleteCategory,
+  seedCategories,
 } from "../api/categories";
 
 export default function useCategories(section) {
@@ -18,6 +19,7 @@ export default function useCategories(section) {
   // Confirm delete dialog state
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [seeding, setSeeding] = useState(false);
 
   useEffect(() => {
     if (section !== "categories") return;
@@ -130,6 +132,27 @@ export default function useCategories(section) {
     }
   }
 
+  async function handleSeed() {
+    setSeeding(true);
+    setError("");
+    setSuccess("");
+    try {
+      const res = await seedCategories();
+      setSuccess(res.data.message || "Default categories created!");
+      await loadCategories();
+    } catch (err) {
+      const data = err.response?.data;
+      if (data && typeof data === "object") {
+        const first = Object.values(data).flat()[0];
+        setError(first || "Failed to seed categories.");
+      } else {
+        setError("Failed to seed categories.");
+      }
+    } finally {
+      setSeeding(false);
+    }
+  }
+
   function clearError() {
     setError("");
   }
@@ -148,10 +171,12 @@ export default function useCategories(section) {
     submitting,
     deleteTarget,
     deleting,
+    seeding,
     resetForm,
     handleFormChange,
     startEdit,
     handleSubmit,
+    handleSeed,
     requestDelete,
     cancelDelete,
     confirmDelete,

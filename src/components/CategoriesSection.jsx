@@ -23,6 +23,8 @@ export default function CategoriesSection({ section }) {
     confirmDelete,
     clearError,
     clearSuccess,
+    seeding,
+    handleSeed,
   } = useCategories(section);
 
   return (
@@ -34,12 +36,21 @@ export default function CategoriesSection({ section }) {
             Organize your passwords with custom categories.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={resetForm}
-          className="px-4 py-2 text-sm bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg transition cursor-pointer">
-          New Category
-        </button>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={handleSeed}
+            disabled={seeding}
+            className="px-4 py-2 text-sm bg-gray-800 hover:bg-gray-700 disabled:bg-gray-800/50 disabled:cursor-not-allowed text-gray-300 rounded-lg transition cursor-pointer">
+            {seeding ? "Seeding…" : "Seed Defaults"}
+          </button>
+          <button
+            type="button"
+            onClick={resetForm}
+            className="px-4 py-2 text-sm bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg transition cursor-pointer">
+            New Category
+          </button>
+        </div>
       </div>
 
       <AlertMessage type="error" message={error} onClose={clearError} />
