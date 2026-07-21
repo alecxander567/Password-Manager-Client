@@ -14,6 +14,12 @@ export const getVaultDetail = (vaultId) => {
   return axiosInstance.get(`/api/vaults/${vaultId}/`);
 };
 
+export const unlockVault = (vaultId, masterPassword) => {
+  return axiosInstance.post(`/api/vaults/${vaultId}/unlock/`, {
+    master_password: masterPassword,
+  });
+};
+
 // ── Accounts ────────────────────────────────────────────
 
 export const listAccounts = (vaultId) => {

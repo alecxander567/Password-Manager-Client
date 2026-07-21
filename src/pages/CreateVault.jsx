@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { FiLock, FiArrowLeft, FiUnlock } from "react-icons/fi";
 import { createVault, webauthnRegisterOptions, webauthnRegisterVerify } from "../api/vaults";
 import { getCategories } from "../api/categories";
-import { deriveKey, generateSalt, generateVaultKey, encryptVaultKey } from "../utils/crypto";
 
 // Convert ArrayBuffer to base64url
 function bufToBase64Url(buf) {
@@ -43,35 +42,20 @@ export default function CreateVault() {
     setSubmitting(true);
 
     try {
-      // 1. Generate salt & vault key
-      const salt = generateSalt();
-      const vaultKeyHex = await generateVaultKey();
-
-      // 2. Derive key from master password
-      const wrappingKey = await deriveKey(form.masterPassword, salt);
-
-      // 3. Encrypt vault key with derived key
-      const { encryptedVaultKey, iv } = await encryptVaultKey(vaultKeyHex, wrappingKey);
-
-      // 4. Send to backend
+      // Send to backend - backend handles all encryption
       const res = await createVault({
         name: form.name,
         category: form.category,
-        kdf_salt: salt,
-        encrypted_vault_key: encryptedVaultKey,
-        iv: iv,
+        master_password: form.masterPassword,
       });
 
       const vaultId = res.data.id || res.data.vault?.id;
-
-      // Store vault key hex temporarily for biometric step
-      sessionStorage.setItem("pending_vault_key_hex", vaultKeyHex);
 
       if (biometricEnabled) {
         setStep("biometric");
         setSubmitting(false);
         // Trigger WebAuthn registration
-        await handleBiometricRegister(vaultId, vaultKeyHex);
+        await handleBiometricRegister(vaultId);
       } else {
         setStep("done");
         setSubmitting(false);
@@ -85,7 +69,7 @@ export default function CreateVault() {
     }
   };
 
-  const handleBiometricRegister = async (vaultId, vaultKeyHex) => {
+  const handleBiometricRegister = async (vaultId) => {
     setError("");
     setSubmitting(true);
 
@@ -122,7 +106,6 @@ export default function CreateVault() {
         type: credential.type,
         clientExtensionResults: credential.getClientExtensionResults?.() || {},
         transports: credential.response.getTransports?.() || [],
-        encrypted_vault_key_biometric: vaultKeyHex, // For now; in production you'd encrypt with biometric-derived key
       };
 
       // 4. Verify with server
@@ -138,7 +121,6 @@ export default function CreateVault() {
   };
 
   const handleSkipBiometric = () => {
-    sessionStorage.removeItem("pending_vault_key_hex");
     setStep("done");
   };
 

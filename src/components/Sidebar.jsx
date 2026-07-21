@@ -9,10 +9,10 @@ import {
 
 const navItems = [
   { key: "profile", label: "Profile", icon: FiUser, section: true },
+  { key: "vaults", label: "My Vaults", icon: FiLock, section: false, path: "/vaults" },
   { key: "categories", label: "Categories", icon: FiTag, section: true },
   { key: "security", label: "Security", icon: FiShield, section: true },
   { key: "danger", label: "Danger Zone", icon: FiAlertTriangle, section: true },
-  { key: "vaults", label: "My Vaults", icon: FiLock, section: false, path: "/vaults" },
 ];
 
 export default function Sidebar({ activeSection, onSectionChange }) {
