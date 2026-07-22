@@ -6,6 +6,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Vaults from "./pages/Vaults";
+import Favorites from "./pages/Favorites";
 import CreateVault from "./pages/CreateVault";
 import UnlockVault from "./pages/UnlockVault";
 import VaultAccounts from "./pages/VaultAccounts";
@@ -31,6 +32,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <Vaults />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/favorites"
+            element={
+              <ProtectedRoute>
+                <Favorites />
               </ProtectedRoute>
             }
           />

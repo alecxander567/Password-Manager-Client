@@ -9,6 +9,7 @@ import {
 } from "../api/vaults";
 import { importVaultKey } from "../utils/crypto";
 import { useVaultSession } from "../hooks/VaultSessionContext";
+import TopBar from "../components/TopBar";
 
 function bufToBase64Url(buf) {
   const bytes = new Uint8Array(buf);
@@ -222,16 +223,11 @@ export default function UnlockVault() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100">
-      <header className="border-b border-gray-800 bg-gray-900/50 backdrop-blur-sm">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 h-16 flex items-center">
-          <button
-            onClick={() => navigate("/vaults")}
-            className="flex items-center gap-2 text-gray-400 hover:text-white transition cursor-pointer">
-            <FiArrowLeft className="w-5 h-5" />
-            <span>Back</span>
-          </button>
-        </div>
-      </header>
+      <TopBar
+        leftLabel="Back"
+        leftIcon={FiArrowLeft}
+        onLeftClick={() => navigate("/vaults")}
+      />
 
       <div className="max-w-md mx-auto px-4 sm:px-6 py-16">
         <div className="text-center mb-8">

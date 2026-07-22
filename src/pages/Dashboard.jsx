@@ -4,8 +4,8 @@ import { updateUserProfile, changePassword, deleteAccount } from "../api/auth";
 import { useNavigate } from "react-router-dom";
 import CategoriesSection from "../components/CategoriesSection";
 import Sidebar from "../components/Sidebar";
+import TopBar from "../components/TopBar";
 import {
-  FiLock,
   FiAlertTriangle,
   FiLogOut,
   FiCamera,
@@ -139,23 +139,14 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100">
-      {/* Top bar */}
-      <header className="border-b border-gray-800 bg-gray-900/50 backdrop-blur-sm">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-cyan-600/20 border border-cyan-800/50 flex items-center justify-center">
-              <FiLock className="w-5 h-5 text-cyan-400" />
-            </div>
-            <span className="text-lg font-bold text-white">VaultPass</span>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 px-4 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition cursor-pointer">
-            <FiLogOut className="w-4 h-4" />
-            Sign Out
-          </button>
-        </div>
-      </header>
+      <TopBar maxWidth="max-w-6xl">
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition cursor-pointer">
+          <FiLogOut className="w-4 h-4" />
+          Sign Out
+        </button>
+      </TopBar>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
         {/* Welcome */}
@@ -319,7 +310,9 @@ export default function Dashboard() {
               </div>
             )}
 
-            {section === "categories" && <CategoriesSection section={section} />}
+            {section === "categories" && (
+              <CategoriesSection section={section} />
+            )}
 
             {section === "security" && (
               <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">

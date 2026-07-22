@@ -11,6 +11,8 @@ import {
   FiKey,
   FiEdit,
   FiTrash2,
+  FiSearch,
+  FiChevronDown,
 } from "react-icons/fi";
 import { listAccounts, createAccount, getAccountDetail } from "../api/vaults";
 import { encrypt, decrypt } from "../utils/crypto";
@@ -19,6 +21,7 @@ import EditAccountModal from "../components/EditAccountModal";
 import DeleteConfirmDialog from "../components/DeleteConfirmDialog";
 import AlertMessage from "../components/AlertMessage";
 import { useAccountManagement } from "../hooks/useAccountManagement";
+import TopBar from "../components/TopBar";
 
 export default function VaultAccounts() {
   const { vaultId } = useParams();
@@ -33,6 +36,8 @@ export default function VaultAccounts() {
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortOrder, setSortOrder] = useState("asc");
 
   // Add account modal
   const [showAdd, setShowAdd] = useState(false);
@@ -205,6 +210,21 @@ export default function VaultAccounts() {
 
   const accountManagement = useAccountManagement(vaultId, loadAccounts);
 
+  // Filter accounts based on search query, then sort alphabetically
+  const filteredAccounts = accounts
+    .filter((account) =>
+      account.site_name.toLowerCase().includes(searchQuery.toLowerCase()),
+    )
+    .sort((a, b) => {
+      const nameA = a.site_name.toLowerCase();
+      const nameB = b.site_name.toLowerCase();
+      if (sortOrder === "asc") {
+        return nameA.localeCompare(nameB);
+      } else {
+        return nameB.localeCompare(nameA);
+      }
+    });
+
   // ── Render ──────────────────────────────────────────
 
   if (!isUnlocked && !loading) {
@@ -213,27 +233,21 @@ export default function VaultAccounts() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100">
-      {/* Top bar */}
-      <header className="border-b border-gray-800 bg-gray-900/50 backdrop-blur-sm">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <button
-            onClick={() => navigate("/vaults")}
-            className="flex items-center gap-2 text-gray-400 hover:text-white transition cursor-pointer">
-            <FiArrowLeft className="w-5 h-5" />
-            <span>Vaults</span>
-          </button>
-          <button
-            onClick={handleLock}
-            className="flex items-center gap-2 px-4 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition cursor-pointer">
-            <FiLogOut className="w-4 h-4" />
-            Lock Vault
-          </button>
-        </div>
-      </header>
+      <TopBar
+        leftLabel="Vaults"
+        leftIcon={FiArrowLeft}
+        onLeftClick={() => navigate("/vaults")}>
+        <button
+          onClick={handleLock}
+          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition cursor-pointer">
+          <FiLogOut className="w-4 h-4" />
+          Lock Vault
+        </button>
+      </TopBar>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold text-white">Accounts</h1>
             <p className="text-gray-400 text-sm mt-1">
@@ -251,8 +265,40 @@ export default function VaultAccounts() {
           </button>
         </div>
 
+        {/* Search & sort bar */}
+        {!loading && accounts.length > 0 && (
+          <div className="flex flex-col sm:flex-row gap-3 mb-6">
+            {/* Search */}
+            <div className="relative flex-1">
+              <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search accounts by name…"
+                className="w-full pl-10 pr-4 py-2.5 bg-gray-900 border border-gray-800 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition"
+              />
+            </div>
+            {/* Sort order */}
+            <div className="relative">
+              <select
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value)}
+                className="appearance-none w-full sm:w-auto px-4 py-2.5 pr-10 bg-gray-900 border border-gray-800 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition cursor-pointer">
+                <option value="asc">A → Z</option>
+                <option value="desc">Z → A</option>
+              </select>
+              <FiChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+            </div>
+          </div>
+        )}
+
         {/* Error */}
-        <AlertMessage type="error" message={error} onClose={() => setError("")} />
+        <AlertMessage
+          type="error"
+          message={error}
+          onClose={() => setError("")}
+        />
 
         {/* Loading */}
         {loading && (
@@ -261,7 +307,7 @@ export default function VaultAccounts() {
           </div>
         )}
 
-        {/* Empty state */}
+        {/* Empty state – no accounts at all */}
         {!loading && accounts.length === 0 && (
           <div className="text-center py-16">
             <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-800 border border-gray-700 flex items-center justify-center">
@@ -284,10 +330,25 @@ export default function VaultAccounts() {
           </div>
         )}
 
+        {/* Empty state – no search results */}
+        {!loading && accounts.length > 0 && filteredAccounts.length === 0 && (
+          <div className="text-center py-16">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-800 border border-gray-700 flex items-center justify-center">
+              <FiSearch className="w-8 h-8 text-gray-500" />
+            </div>
+            <h2 className="text-lg font-medium text-gray-300 mb-1">
+              No results found
+            </h2>
+            <p className="text-gray-500 text-sm">
+              No accounts match "{searchQuery}". Try a different search term.
+            </p>
+          </div>
+        )}
+
         {/* Account list */}
-        {!loading && accounts.length > 0 && (
+        {!loading && filteredAccounts.length > 0 && (
           <div className="grid gap-3">
-            {accounts.map((account) => (
+            {filteredAccounts.map((account) => (
               <div
                 key={account.id}
                 className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
@@ -343,13 +404,17 @@ export default function VaultAccounts() {
                         </button>
                       )}
                       <button
-                        onClick={() => accountManagement.handleEditClick(account)}
+                        onClick={() =>
+                          accountManagement.handleEditClick(account)
+                        }
                         className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition cursor-pointer"
                         title="Edit">
                         <FiEdit className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => accountManagement.handleDeleteClick(account.id)}
+                        onClick={() =>
+                          accountManagement.handleDeleteClick(account.id)
+                        }
                         className="p-2 text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded-lg transition cursor-pointer"
                         title="Delete">
                         <FiTrash2 className="w-4 h-4" />
@@ -436,7 +501,9 @@ export default function VaultAccounts() {
         {/* Edit Account Modal */}
         <EditAccountModal
           open={accountManagement.editingId !== null}
-          account={accounts.find((a) => a.id === accountManagement.editingId) || null}
+          account={
+            accounts.find((a) => a.id === accountManagement.editingId) || null
+          }
           form={accountManagement.editForm}
           onChange={accountManagement.setEditForm}
           onClose={accountManagement.handleCancelEdit}
@@ -455,7 +522,9 @@ export default function VaultAccounts() {
           message="Are you sure you want to delete this account? This action cannot be undone."
           confirmLabel="Delete"
           loading={accountManagement.deleting}
-          onConfirm={() => accountManagement.handleDeleteConfirm(refreshActivity)}
+          onConfirm={() =>
+            accountManagement.handleDeleteConfirm(refreshActivity)
+          }
           onCancel={accountManagement.handleCancelDelete}
         />
 

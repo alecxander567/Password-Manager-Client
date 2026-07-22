@@ -8,6 +8,7 @@ import {
   webauthnRegisterVerify,
 } from "../api/vaults";
 import { getCategories } from "../api/categories";
+import TopBar from "../components/TopBar";
 
 // Convert ArrayBuffer to base64url
 function bufToBase64Url(buf) {
@@ -202,16 +203,11 @@ export default function CreateVault() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100">
-      <header className="border-b border-gray-800 bg-gray-900/50 backdrop-blur-sm">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 h-16 flex items-center">
-          <button
-            onClick={() => navigate("/vaults")}
-            className="flex items-center gap-2 text-gray-400 hover:text-white transition cursor-pointer">
-            <FiArrowLeft className="w-5 h-5" />
-            <span>Back</span>
-          </button>
-        </div>
-      </header>
+      <TopBar
+        leftLabel="Back"
+        leftIcon={FiArrowLeft}
+        onLeftClick={() => navigate("/vaults")}
+      />
 
       <div className="max-w-lg mx-auto px-4 sm:px-6 py-12">
         <div className="flex items-center gap-4 mb-8">
