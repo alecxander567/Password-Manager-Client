@@ -1,7 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiLock, FiArrowLeft, FiUnlock } from "react-icons/fi";
-import { createVault, webauthnRegisterOptions, webauthnRegisterVerify } from "../api/vaults";
+import {
+  createVault,
+  unlockVault,
+  webauthnRegisterOptions,
+  webauthnRegisterVerify,
+} from "../api/vaults";
 import { getCategories } from "../api/categories";
 
 // Convert ArrayBuffer to base64url
@@ -11,13 +16,20 @@ function bufToBase64Url(buf) {
   for (let i = 0; i < bytes.byteLength; i++) {
     binary += String.fromCharCode(bytes[i]);
   }
-  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  return btoa(binary)
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
 }
 
 export default function CreateVault() {
   const navigate = useNavigate();
   const [step, setStep] = useState("form"); // form | biometric | done
-  const [form, setForm] = useState({ name: "", category: "", masterPassword: "" });
+  const [form, setForm] = useState({
+    name: "",
+    category: "",
+    masterPassword: "",
+  });
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [biometricEnabled, setBiometricEnabled] = useState(false);
@@ -61,7 +73,8 @@ export default function CreateVault() {
         setSubmitting(false);
       }
     } catch (err) {
-      const msg = err.response?.data?.detail ||
+      const msg =
+        err.response?.data?.detail ||
         err.response?.data?.non_field_errors?.[0] ||
         "Failed to create vault.";
       setError(msg);
@@ -74,6 +87,9 @@ export default function CreateVault() {
     setSubmitting(true);
 
     try {
+      // Establish the server-side vault-key handoff for registration.
+      await unlockVault(vaultId, form.masterPassword);
+
       // 1. Get registration options from server
       const optsRes = await webauthnRegisterOptions(vaultId);
       const options = optsRes.data;
@@ -81,7 +97,9 @@ export default function CreateVault() {
       // Convert challenge and user.id from base64 to Uint8Array if needed
       const publicKey = {
         ...options,
-        challenge: Uint8Array.from(atob(options.challenge), (c) => c.charCodeAt(0)),
+        challenge: Uint8Array.from(atob(options.challenge), (c) =>
+          c.charCodeAt(0),
+        ),
         user: {
           ...options.user,
           id: Uint8Array.from(atob(options.user.id), (c) => c.charCodeAt(0)),
@@ -101,7 +119,9 @@ export default function CreateVault() {
         rawId: bufToBase64Url(credential.rawId),
         response: {
           clientDataJSON: bufToBase64Url(credential.response.clientDataJSON),
-          attestationObject: bufToBase64Url(credential.response.attestationObject),
+          attestationObject: bufToBase64Url(
+            credential.response.attestationObject,
+          ),
         },
         type: credential.type,
         clientExtensionResults: credential.getClientExtensionResults?.() || {},
@@ -137,8 +157,7 @@ export default function CreateVault() {
           </p>
           <button
             onClick={() => navigate("/vaults")}
-            className="px-6 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white font-medium rounded-lg transition cursor-pointer"
-          >
+            className="px-6 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white font-medium rounded-lg transition cursor-pointer">
             Go to Vaults
           </button>
         </div>
@@ -157,8 +176,8 @@ export default function CreateVault() {
             Register Biometric
           </h1>
           <p className="text-gray-400 mb-4">
-            Follow your device's prompts to register a fingerprint or face unlock
-            for quick access to this vault.
+            Follow your device's prompts to register a fingerprint or face
+            unlock for quick access to this vault.
           </p>
           {submitting && (
             <div className="flex justify-center mb-4">
@@ -173,8 +192,7 @@ export default function CreateVault() {
           <button
             onClick={handleSkipBiometric}
             disabled={submitting}
-            className="px-6 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium rounded-lg transition cursor-pointer disabled:opacity-50"
-          >
+            className="px-6 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium rounded-lg transition cursor-pointer disabled:opacity-50">
             Skip Biometric
           </button>
         </div>
@@ -188,8 +206,7 @@ export default function CreateVault() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 h-16 flex items-center">
           <button
             onClick={() => navigate("/vaults")}
-            className="flex items-center gap-2 text-gray-400 hover:text-white transition cursor-pointer"
-          >
+            className="flex items-center gap-2 text-gray-400 hover:text-white transition cursor-pointer">
             <FiArrowLeft className="w-5 h-5" />
             <span>Back</span>
           </button>
@@ -203,9 +220,7 @@ export default function CreateVault() {
           </div>
           <div>
             <h1 className="text-xl font-bold text-white">New Vault</h1>
-            <p className="text-gray-400 text-sm">
-              Create a new password vault
-            </p>
+            <p className="text-gray-400 text-sm">Create a new password vault</p>
           </div>
         </div>
 
@@ -235,7 +250,7 @@ export default function CreateVault() {
             <label className="block text-sm font-medium text-gray-300 mb-1.5">
               Category
             </label>
-            {categoriesError ? (
+            {categoriesError ?
               <input
                 type="text"
                 name="category"
@@ -245,17 +260,17 @@ export default function CreateVault() {
                 placeholder="e.g. General, Finance, Social"
                 className="w-full px-4 py-2.5 bg-gray-900 border border-gray-800 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition"
               />
-            ) : (
-              <select
+            : <select
                 name="category"
                 value={form.category}
                 onChange={handleChange}
                 required
                 disabled={categoriesLoading}
-                className="w-full px-4 py-2.5 bg-gray-900 border border-gray-800 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition disabled:opacity-50 appearance-none"
-              >
+                className="w-full px-4 py-2.5 bg-gray-900 border border-gray-800 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition disabled:opacity-50 appearance-none">
                 <option value="" disabled>
-                  {categoriesLoading ? "Loading categories…" : "Select a category"}
+                  {categoriesLoading ?
+                    "Loading categories…"
+                  : "Select a category"}
                 </option>
                 {categories.map((cat) => (
                   <option key={cat.id} value={cat.name}>
@@ -263,7 +278,7 @@ export default function CreateVault() {
                   </option>
                 ))}
               </select>
-            )}
+            }
           </div>
 
           <div>
@@ -281,7 +296,8 @@ export default function CreateVault() {
               className="w-full px-4 py-2.5 bg-gray-900 border border-gray-800 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition"
             />
             <p className="mt-1 text-xs text-gray-500">
-              This password will be used to derive your encryption key. It cannot be recovered if lost.
+              This password will be used to derive your encryption key. It
+              cannot be recovered if lost.
             </p>
           </div>
 
@@ -289,7 +305,9 @@ export default function CreateVault() {
           <div className="flex items-center gap-3 p-4 bg-gray-900 border border-gray-800 rounded-lg">
             <FiUnlock className="w-5 h-5 text-cyan-400 shrink-0" />
             <div className="flex-1">
-              <p className="text-sm text-white font-medium">Enable biometric unlock</p>
+              <p className="text-sm text-white font-medium">
+                Enable biometric unlock
+              </p>
               <p className="text-xs text-gray-500">
                 Use fingerprint or face to unlock this vault
               </p>
@@ -308,8 +326,7 @@ export default function CreateVault() {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full py-2.5 px-4 bg-cyan-600 hover:bg-cyan-500 disabled:bg-cyan-800 disabled:cursor-not-allowed text-white font-medium rounded-lg transition cursor-pointer"
-          >
+            className="w-full py-2.5 px-4 bg-cyan-600 hover:bg-cyan-500 disabled:bg-cyan-800 disabled:cursor-not-allowed text-white font-medium rounded-lg transition cursor-pointer">
             {submitting ? "Creating Vault …" : "Create Vault"}
           </button>
         </form>

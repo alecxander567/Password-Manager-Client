@@ -4,6 +4,7 @@ const API_URL = import.meta.env.VITE_API_URL || "";
 
 const axiosInstance = axios.create({
   baseURL: API_URL,
+  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },
@@ -18,7 +19,7 @@ axiosInstance.interceptors.request.use(
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 // Response interceptor: on 401 try to refresh the token
@@ -64,9 +65,11 @@ axiosInstance.interceptors.response.use(
       }
 
       try {
-        const { data } = await axios.post(`${API_URL}/api/users/token/refresh/`, {
-          refresh: refreshToken,
-        });
+        const { data } = await axios.post(
+          `${API_URL}/api/users/token/refresh/`,
+          { refresh: refreshToken },
+          { withCredentials: true },
+        );
         const newAccess = data.access;
         localStorage.setItem("access_token", newAccess);
         processQueue(null, newAccess);
@@ -84,7 +87,7 @@ axiosInstance.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 export default axiosInstance;

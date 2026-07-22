@@ -1,7 +1,6 @@
 import axiosInstance from "./axios";
 
-// ── Vaults ──────────────────────────────────────────────
-
+// Vaults
 export const listVaults = () => {
   return axiosInstance.get("/api/vaults/");
 };
@@ -20,8 +19,7 @@ export const unlockVault = (vaultId, masterPassword) => {
   });
 };
 
-// ── Accounts ────────────────────────────────────────────
-
+// Accounts
 export const listAccounts = (vaultId) => {
   return axiosInstance.get(`/api/vaults/${vaultId}/accounts/`);
 };
@@ -34,20 +32,42 @@ export const getAccountDetail = (vaultId, accountId) => {
   return axiosInstance.get(`/api/vaults/${vaultId}/accounts/${accountId}/`);
 };
 
-// ── WebAuthn ────────────────────────────────────────────
+export const updateAccount = (vaultId, accountId, data) => {
+  return axiosInstance.put(
+    `/api/vaults/${vaultId}/accounts/${accountId}/update/`,
+    data,
+  );
+};
 
+export const deleteAccount = (vaultId, accountId) => {
+  return axiosInstance.delete(
+    `/api/vaults/${vaultId}/accounts/${accountId}/delete/`,
+  );
+};
+
+// WebAuthn
 export const webauthnRegisterOptions = (vaultId) => {
-  return axiosInstance.post(`/api/vaults/${vaultId}/webauthn/register/options/`);
+  return axiosInstance.post(
+    `/api/vaults/${vaultId}/webauthn/register/options/`,
+  );
 };
 
 export const webauthnRegisterVerify = (vaultId, data) => {
-  return axiosInstance.post(`/api/vaults/${vaultId}/webauthn/register/verify/`, data);
+  return axiosInstance.post(
+    `/api/vaults/${vaultId}/webauthn/register/verify/`,
+    data,
+  );
 };
 
 export const webauthnAuthOptions = (vaultId) => {
-  return axiosInstance.post(`/api/vaults/${vaultId}/webauthn/authenticate/options/`);
+  return axiosInstance.post(
+    `/api/vaults/${vaultId}/webauthn/authenticate/options/`,
+  );
 };
 
 export const webauthnAuthVerify = (vaultId, data) => {
-  return axiosInstance.post(`/api/vaults/${vaultId}/webauthn/authenticate/verify/`, data);
+  return axiosInstance.post(
+    `/api/vaults/${vaultId}/webauthn/authenticate/verify/`,
+    data,
+  );
 };

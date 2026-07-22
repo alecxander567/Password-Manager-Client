@@ -28,7 +28,9 @@ function base64ToHex(b64) {
   for (let i = 0; i < binary.length; i++) {
     bytes[i] = binary.charCodeAt(i);
   }
-  return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+  return Array.from(bytes)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 export default function UnlockVault() {
@@ -56,32 +58,26 @@ export default function UnlockVault() {
     setUnlocking(true);
 
     try {
-      // Call backend to verify password and get vault key
-      // Backend will try the password, and fall back to email for old vaults
       const res = await unlockVault(vaultId, password);
-      
-      // Backend returns the decrypted vault key (base64-encoded)
+
       const vaultKeyB64 = res.data.vault_key;
-      
+
       if (!vaultKeyB64) {
         throw new Error("Invalid master password. Please try again.");
       }
 
-      // Convert base64 to hex for importVaultKey
       const vaultKeyHex = base64ToHex(vaultKeyB64);
-
-      // Import the vault key as a CryptoKey
       const vaultKey = await importVaultKey(vaultKeyHex);
 
-      // Store in session
-      unlock(vaultKey, Number(vaultId));
+      unlock(vaultKey, Number(vaultId), vault?.biometric_enabled);
 
-      // Navigate to vault detail
       navigate(`/vaults/${vaultId}/accounts`);
     } catch (err) {
-      // Only show error if the request actually failed
       if (err.response?.status === 400) {
-        setError(err.response?.data?.error || "Invalid master password. Please try again.");
+        setError(
+          err.response?.data?.error ||
+            "Invalid master password. Please try again.",
+        );
       } else {
         setError(err.message || "Failed to unlock vault. Please try again.");
       }
@@ -134,13 +130,64 @@ export default function UnlockVault() {
       };
 
       // 4. Verify with server
-      await webauthnAuthVerify(vaultId, credentialData);
+      const verifyRes = await webauthnAuthVerify(vaultId, credentialData);
 
-      // If we get here, biometric authentication succeeded
-      // Navigate to vault detail
+      // 5. Get the vault key from the response
+      const vaultKeyB64 = verifyRes.data.vault_key;
+
+      // Check if vault_key exists and is not null
+      if (!vaultKeyB64) {
+        // If no vault key, try to get it from the unlock endpoint using the password
+        // This is a fallback for vaults that have biometrics enabled but no stored key
+        if (password) {
+          try {
+            const unlockRes = await unlockVault(vaultId, password);
+            const fallbackKey = unlockRes.data.vault_key;
+            if (fallbackKey) {
+              const vaultKeyHex = base64ToHex(fallbackKey);
+              const vaultKey = await importVaultKey(vaultKeyHex);
+              unlock(vaultKey, Number(vaultId), vault?.biometric_enabled);
+              navigate(`/vaults/${vaultId}/accounts`);
+              return;
+            }
+          } catch (fallbackErr) {
+            console.error("Fallback unlock failed:", fallbackErr);
+          }
+        }
+
+        throw new Error(
+          "No biometric vault key found. Please re-register biometrics or use your master password.",
+        );
+      }
+
+      // 6. Convert base64 to hex for importVaultKey
+      const vaultKeyHex = base64ToHex(vaultKeyB64);
+
+      // 7. Import the vault key as a CryptoKey
+      const vaultKey = await importVaultKey(vaultKeyHex);
+
+      // 8. Store in session with biometric status
+      unlock(vaultKey, Number(vaultId), vault?.biometric_enabled);
+
+      // 9. Navigate to vault detail
       navigate(`/vaults/${vaultId}/accounts`);
     } catch (err) {
-      setError(err.message || "Biometric authentication failed.");
+      console.error("Biometric unlock error:", err);
+
+      if (err.response?.status === 401) {
+        setError("Your session has expired. Please refresh and try again.");
+      } else if (err.response?.status === 400) {
+        setError(
+          err.response?.data?.error ||
+            "Biometric authentication failed. Please try again.",
+        );
+      } else if (err.message?.includes("cancel")) {
+        setError("Biometric authentication was cancelled.");
+      } else {
+        setError(
+          err.message || "Biometric authentication failed. Please try again.",
+        );
+      }
     } finally {
       setBiometricUnlocking(false);
     }
@@ -215,6 +262,7 @@ export default function UnlockVault() {
               onChange={(e) => setPassword(e.target.value)}
               required
               placeholder="Enter your master password"
+              autoComplete="current-password"
               className="w-full px-4 py-2.5 bg-gray-900 border border-gray-800 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition"
             />
           </div>

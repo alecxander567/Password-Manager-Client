@@ -9,10 +9,16 @@ import {
   FiCopy,
   FiLogOut,
   FiKey,
+  FiEdit,
+  FiTrash2,
 } from "react-icons/fi";
 import { listAccounts, createAccount, getAccountDetail } from "../api/vaults";
 import { encrypt, decrypt } from "../utils/crypto";
 import { useVaultSession } from "../hooks/VaultSessionContext";
+import EditAccountModal from "../components/EditAccountModal";
+import DeleteConfirmDialog from "../components/DeleteConfirmDialog";
+import AlertMessage from "../components/AlertMessage";
+import { useAccountManagement } from "../hooks/useAccountManagement";
 
 export default function VaultAccounts() {
   const { vaultId } = useParams();
@@ -197,6 +203,8 @@ export default function VaultAccounts() {
     }
   };
 
+  const accountManagement = useAccountManagement(vaultId, loadAccounts);
+
   // ── Render ──────────────────────────────────────────
 
   if (!isUnlocked && !loading) {
@@ -244,11 +252,7 @@ export default function VaultAccounts() {
         </div>
 
         {/* Error */}
-        {error && (
-          <div className="mb-6 p-3 rounded-lg bg-red-900/40 border border-red-800 text-red-300 text-sm">
-            {error}
-          </div>
-        )}
+        <AlertMessage type="error" message={error} onClose={() => setError("")} />
 
         {/* Loading */}
         {loading && (
@@ -338,6 +342,18 @@ export default function VaultAccounts() {
                           View
                         </button>
                       )}
+                      <button
+                        onClick={() => accountManagement.handleEditClick(account)}
+                        className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition cursor-pointer"
+                        title="Edit">
+                        <FiEdit className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => accountManagement.handleDeleteClick(account.id)}
+                        className="p-2 text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded-lg transition cursor-pointer"
+                        title="Delete">
+                        <FiTrash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -416,6 +432,32 @@ export default function VaultAccounts() {
             </div>
           </div>
         )}
+
+        {/* Edit Account Modal */}
+        <EditAccountModal
+          open={accountManagement.editingId !== null}
+          account={accounts.find((a) => a.id === accountManagement.editingId) || null}
+          form={accountManagement.editForm}
+          onChange={accountManagement.setEditForm}
+          onClose={accountManagement.handleCancelEdit}
+          onSubmit={(e) => {
+            e.preventDefault();
+            accountManagement.handleUpdateAccount(vaultKey, refreshActivity);
+          }}
+          loading={accountManagement.editing}
+          error={accountManagement.editError}
+        />
+
+        {/* Delete Confirmation Dialog */}
+        <DeleteConfirmDialog
+          open={accountManagement.deleteId !== null}
+          title="Delete Account"
+          message="Are you sure you want to delete this account? This action cannot be undone."
+          confirmLabel="Delete"
+          loading={accountManagement.deleting}
+          onConfirm={() => accountManagement.handleDeleteConfirm(refreshActivity)}
+          onCancel={accountManagement.handleCancelDelete}
+        />
 
         {/* Re-prompt modal */}
         {repromptMode && (

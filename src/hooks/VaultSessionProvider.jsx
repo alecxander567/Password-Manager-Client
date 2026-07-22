@@ -4,6 +4,7 @@ import { VaultSessionContext } from "./VaultSessionContext";
 export function VaultSessionProvider({ children }) {
   const [vaultKey, setVaultKey] = useState(null);
   const [vaultId, setVaultId] = useState(null);
+  const [biometricEnabled, setBiometricEnabled] = useState(false);
   const timerRef = useRef(null);
 
   const clearTimer = useCallback(() => {
@@ -30,9 +31,10 @@ export function VaultSessionProvider({ children }) {
   );
 
   const unlock = useCallback(
-    (key, id) => {
+    (key, id, biometric = false) => {
       setVaultKey(key);
       setVaultId(id);
+      setBiometricEnabled(biometric);
       refreshActivity();
     },
     [refreshActivity],
@@ -43,7 +45,7 @@ export function VaultSessionProvider({ children }) {
   }, [clearTimer]);
 
   return (
-    <VaultSessionContext.Provider value={{ vaultKey, vaultId, unlock, lock, refreshActivity }}>
+    <VaultSessionContext.Provider value={{ vaultKey, vaultId, biometricEnabled, unlock, lock, refreshActivity }}>
       {children}
     </VaultSessionContext.Provider>
   );
