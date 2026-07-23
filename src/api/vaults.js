@@ -28,6 +28,10 @@ export const createAccount = (vaultId, data) => {
   return axiosInstance.post(`/api/vaults/${vaultId}/accounts/`, data);
 };
 
+export const checkPasswordStrength = (password) => {
+  return axiosInstance.post("/api/vaults/password-strength/", { password });
+};
+
 export const getAccountDetail = (vaultId, accountId) => {
   return axiosInstance.get(`/api/vaults/${vaultId}/accounts/${accountId}/`);
 };

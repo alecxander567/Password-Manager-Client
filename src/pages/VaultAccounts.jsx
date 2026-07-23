@@ -13,6 +13,7 @@ import {
   FiTrash2,
   FiSearch,
   FiChevronDown,
+  FiZap,
 } from "react-icons/fi";
 import { listAccounts, createAccount, getAccountDetail } from "../api/vaults";
 import { encrypt, decrypt } from "../utils/crypto";
@@ -22,6 +23,11 @@ import DeleteConfirmDialog from "../components/DeleteConfirmDialog";
 import AlertMessage from "../components/AlertMessage";
 import { useAccountManagement } from "../hooks/useAccountManagement";
 import TopBar from "../components/TopBar";
+import PasswordStrength from "../components/PasswordStrength";
+import PasswordStrengthBar from "../components/PasswordStrengthBar";
+import PasswordGenerator from "../components/PasswordGenerator";
+import LoadingSpinner from "../components/LoadingSpinner";
+import { evaluatePasswordStrength } from "../utils/passwordStrength";
 
 export default function VaultAccounts() {
   const { vaultId } = useParams();
@@ -43,6 +49,7 @@ export default function VaultAccounts() {
   const [showAdd, setShowAdd] = useState(false);
   const [addForm, setAddForm] = useState({ site_name: "", password: "" });
   const [adding, setAdding] = useState(false);
+  const [showGenerator, setShowGenerator] = useState(false);
 
   // View password
   const [viewingId, setViewingId] = useState(null);
@@ -128,6 +135,8 @@ export default function VaultAccounts() {
         site_name: addForm.site_name,
         encrypted_password: ciphertext,
         iv_nonce: iv,
+        password_strength_score: evaluatePasswordStrength(addForm.password)
+          .score,
       });
 
       setAddForm({ site_name: "", password: "" });
@@ -303,7 +312,7 @@ export default function VaultAccounts() {
         {/* Loading */}
         {loading && (
           <div className="flex justify-center py-16">
-            <div className="w-8 h-8 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+            <LoadingSpinner fullPage message="Loading accounts…" />
           </div>
         )}
 
@@ -362,6 +371,10 @@ export default function VaultAccounts() {
                         <h3 className="text-white font-medium">
                           {account.site_name}
                         </h3>
+                        <PasswordStrengthBar
+                          score={account.password_strength}
+                          label={account.password_strength_label}
+                        />
                         {viewingId === account.id && (
                           <p className="text-sm font-mono text-gray-300 mt-0.5">
                             {revealedId === account.id ?
@@ -465,19 +478,29 @@ export default function VaultAccounts() {
                   <label className="block text-sm font-medium text-gray-300 mb-1.5">
                     Password
                   </label>
-                  <input
-                    type="password"
-                    value={addForm.password}
-                    onChange={(e) =>
-                      setAddForm((prev) => ({
-                        ...prev,
-                        password: e.target.value,
-                      }))
-                    }
-                    required
-                    placeholder="Enter the password"
-                    className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition"
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="password"
+                      value={addForm.password}
+                      onChange={(e) =>
+                        setAddForm((prev) => ({
+                          ...prev,
+                          password: e.target.value,
+                        }))
+                      }
+                      required
+                      placeholder="Enter the password"
+                      className="flex-1 px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowGenerator(true)}
+                      className="px-3 py-2.5 bg-yellow-600 hover:bg-yellow-500 text-white text-sm font-medium rounded-lg transition cursor-pointer whitespace-nowrap"
+                      title="Generate a secure password">
+                      <FiZap className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <PasswordStrength password={addForm.password} />
                 </div>
                 <div className="flex gap-3 pt-2">
                   <button
@@ -527,6 +550,17 @@ export default function VaultAccounts() {
           }
           onCancel={accountManagement.handleCancelDelete}
         />
+
+        {/* Password Generator modal */}
+        {showGenerator && (
+          <PasswordGenerator
+            onSelectPassword={(password) => {
+              setAddForm((prev) => ({ ...prev, password }));
+              setShowGenerator(false);
+            }}
+            onClose={() => setShowGenerator(false)}
+          />
+        )}
 
         {/* Re-prompt modal */}
         {repromptMode && (

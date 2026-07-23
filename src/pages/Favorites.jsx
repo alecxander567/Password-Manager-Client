@@ -255,7 +255,7 @@ export default function Favorites() {
 
         {loading && (
           <div className="flex justify-center py-16">
-            <LoadingSpinner />
+            <LoadingSpinner fullPage message="Loading favorites…" />
           </div>
         )}
 

@@ -1,4 +1,5 @@
 import { FiX } from "react-icons/fi";
+import PasswordStrength from "./PasswordStrength";
 
 export default function EditAccountModal({
   open,
@@ -73,6 +74,7 @@ export default function EditAccountModal({
               placeholder="Enter new password"
               className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition"
             />
+            <PasswordStrength password={form.password} />
           </div>
           <div className="flex gap-3 pt-2">
             <button

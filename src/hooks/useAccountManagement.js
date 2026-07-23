@@ -7,6 +7,7 @@ import {
   webauthnAuthVerify,
 } from "../api/vaults";
 import { encrypt } from "../utils/crypto";
+import { evaluatePasswordStrength } from "../utils/passwordStrength";
 
 function bufToBase64Url(buf) {
   const bytes = new Uint8Array(buf);
@@ -161,6 +162,9 @@ export function useAccountManagement(vaultId, onSuccess) {
           const { ciphertext, iv } = await encrypt(editForm.password, vaultKey);
           updateData.encrypted_password = ciphertext;
           updateData.iv_nonce = iv;
+          updateData.password_strength_score = evaluatePasswordStrength(
+            editForm.password,
+          ).score;
         }
 
         await updateAccount(vaultId, editingId, updateData);

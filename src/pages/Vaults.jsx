@@ -21,6 +21,7 @@ import { useVaultSession } from "../hooks/VaultSessionContext";
 import { importVaultKey } from "../utils/crypto";
 import useFavorites, { normalizeFavoriteId } from "../hooks/useFavorites";
 import AlertMessage from "../components/AlertMessage";
+import LoadingSpinner from "../components/LoadingSpinner";
 import TopBar from "../components/TopBar";
 
 function bufToBase64Url(buf) {
@@ -254,7 +255,7 @@ export default function Vaults() {
 
         {loading && (
           <div className="flex justify-center py-16">
-            <div className="w-8 h-8 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+            <LoadingSpinner fullPage message="Loading vaults…" />
           </div>
         )}
 
