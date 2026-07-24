@@ -1,31 +1,48 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FiLock } from "react-icons/fi";
 import { useAuth } from "../hooks/AuthContext";
 
 export default function Login() {
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const navigate = useNavigate();
 
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  // Clear any existing session when landing on login page
+  useEffect(() => {
+    // Clear all storage to ensure a clean login state
+    localStorage.clear();
+    sessionStorage.clear();
+
+    // If user is already logged in, redirect to dashboard
+    if (user) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [user, navigate]);
+
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    // Clear error when user starts typing
+    if (error) setError("");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setSubmitting(true);
+
     try {
       await login(form.email, form.password);
-      navigate("/dashboard");
+      // Use replace to prevent going back to login page
+      navigate("/dashboard", { replace: true });
     } catch (err) {
       const msg =
         err.response?.data?.detail ||
         err.response?.data?.non_field_errors?.[0] ||
+        err.response?.data?.error ||
         "Login failed. Please try again.";
       setError(msg);
     } finally {
@@ -89,6 +106,7 @@ export default function Login() {
                 value={form.email}
                 onChange={handleChange}
                 required
+                autoComplete="email"
                 className="w-full px-4 py-2.5 bg-gray-900 border border-gray-800 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition"
                 placeholder="you@example.com"
               />
@@ -104,6 +122,7 @@ export default function Login() {
                 value={form.password}
                 onChange={handleChange}
                 required
+                autoComplete="current-password"
                 className="w-full px-4 py-2.5 bg-gray-900 border border-gray-800 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition"
                 placeholder="••••••••"
               />
@@ -112,8 +131,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full py-2.5 px-4 bg-cyan-600 hover:bg-cyan-500 disabled:bg-cyan-800 disabled:cursor-not-allowed text-white font-medium rounded-lg transition cursor-pointer"
-            >
+              className="w-full py-2.5 px-4 bg-cyan-600 hover:bg-cyan-500 disabled:bg-cyan-800 disabled:cursor-not-allowed text-white font-medium rounded-lg transition cursor-pointer">
               {submitting ? "Signing in …" : "Sign In"}
             </button>
           </form>
@@ -122,8 +140,7 @@ export default function Login() {
             Don't have an account?{" "}
             <Link
               to="/register"
-              className="text-cyan-400 hover:text-cyan-300 transition"
-            >
+              className="text-cyan-400 hover:text-cyan-300 transition">
               Create one
             </Link>
           </p>

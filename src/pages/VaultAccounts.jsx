@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   FiLock,
@@ -23,10 +23,12 @@ import DeleteConfirmDialog from "../components/DeleteConfirmDialog";
 import AlertMessage from "../components/AlertMessage";
 import { useAccountManagement } from "../hooks/useAccountManagement";
 import TopBar from "../components/TopBar";
-import PasswordStrength from "../components/PasswordStrength";
 import PasswordStrengthBar from "../components/PasswordStrengthBar";
 import PasswordGenerator from "../components/PasswordGenerator";
 import LoadingSpinner from "../components/LoadingSpinner";
+import PasswordStrengthFilter from "../components/PasswordStrengthFilter";
+import PasswordStrengthSummary from "../components/PasswordStrengthSummary";
+import { usePasswordFilter } from "../hooks/usePasswordFilter";
 import { evaluatePasswordStrength } from "../utils/passwordStrength";
 
 export default function VaultAccounts() {
@@ -65,6 +67,10 @@ export default function VaultAccounts() {
 
   // Check if vault is unlocked
   const isUnlocked = vaultKey && sessionVaultId === Number(vaultId);
+
+  // Password filter hook
+  const { strengthFilter, setStrengthFilter, filteredAccounts } =
+    usePasswordFilter(accounts);
 
   const loadAccounts = useCallback(async () => {
     setLoading(true);
@@ -127,16 +133,18 @@ export default function VaultAccounts() {
     try {
       refreshActivity();
 
+      // Evaluate password strength client-side for real-time feedback
+      const strengthResult = evaluatePasswordStrength(addForm.password);
+
       // Encrypt the password with the vault key
       const { ciphertext, iv } = await encrypt(addForm.password, vaultKey);
 
-      // Send to backend
+      // Send to backend with the evaluated score
       await createAccount(vaultId, {
         site_name: addForm.site_name,
         encrypted_password: ciphertext,
         iv_nonce: iv,
-        password_strength_score: evaluatePasswordStrength(addForm.password)
-          .score,
+        password_strength_score: strengthResult.score, // Send 0-100 score
       });
 
       setAddForm({ site_name: "", password: "" });
@@ -219,12 +227,15 @@ export default function VaultAccounts() {
 
   const accountManagement = useAccountManagement(vaultId, loadAccounts);
 
-  // Filter accounts based on search query, then sort alphabetically
-  const filteredAccounts = accounts
-    .filter((account) =>
+  // Apply search and sort to filtered accounts
+  const displayedAccounts = useMemo(() => {
+    // First apply search filter
+    const searchFiltered = filteredAccounts.filter((account) =>
       account.site_name.toLowerCase().includes(searchQuery.toLowerCase()),
-    )
-    .sort((a, b) => {
+    );
+
+    // Then apply sorting
+    return searchFiltered.sort((a, b) => {
       const nameA = a.site_name.toLowerCase();
       const nameB = b.site_name.toLowerCase();
       if (sortOrder === "asc") {
@@ -233,6 +244,7 @@ export default function VaultAccounts() {
         return nameB.localeCompare(nameA);
       }
     });
+  }, [filteredAccounts, searchQuery, sortOrder]);
 
   // ── Render ──────────────────────────────────────────
 
@@ -262,6 +274,7 @@ export default function VaultAccounts() {
             <p className="text-gray-400 text-sm mt-1">
               Vault unlocked — tap an account to view its password
             </p>
+            <PasswordStrengthSummary accounts={accounts} />
           </div>
           <button
             onClick={() => {
@@ -274,7 +287,7 @@ export default function VaultAccounts() {
           </button>
         </div>
 
-        {/* Search & sort bar */}
+        {/* Search, filter & sort bar */}
         {!loading && accounts.length > 0 && (
           <div className="flex flex-col sm:flex-row gap-3 mb-6">
             {/* Search */}
@@ -288,8 +301,16 @@ export default function VaultAccounts() {
                 className="w-full pl-10 pr-4 py-2.5 bg-gray-900 border border-gray-800 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition"
               />
             </div>
+
+            {/* Strength Filter */}
+            <PasswordStrengthFilter
+              value={strengthFilter}
+              onChange={setStrengthFilter}
+              className="flex-shrink-0"
+            />
+
             {/* Sort order */}
-            <div className="relative">
+            <div className="relative flex-shrink-0">
               <select
                 value={sortOrder}
                 onChange={(e) => setSortOrder(e.target.value)}
@@ -340,7 +361,7 @@ export default function VaultAccounts() {
         )}
 
         {/* Empty state – no search results */}
-        {!loading && accounts.length > 0 && filteredAccounts.length === 0 && (
+        {!loading && accounts.length > 0 && displayedAccounts.length === 0 && (
           <div className="text-center py-16">
             <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-800 border border-gray-700 flex items-center justify-center">
               <FiSearch className="w-8 h-8 text-gray-500" />
@@ -349,15 +370,22 @@ export default function VaultAccounts() {
               No results found
             </h2>
             <p className="text-gray-500 text-sm">
-              No accounts match "{searchQuery}". Try a different search term.
+              {searchQuery ?
+                `No accounts match "${searchQuery}"`
+              : `No ${strengthFilter === "all" ? "" : strengthFilter} password accounts found`
+              }
+              {strengthFilter !== "all" &&
+                !searchQuery &&
+                ` in the ${strengthFilter} category`}
+              . Try adjusting your filters.
             </p>
           </div>
         )}
 
         {/* Account list */}
-        {!loading && filteredAccounts.length > 0 && (
+        {!loading && displayedAccounts.length > 0 && (
           <div className="grid gap-3">
-            {filteredAccounts.map((account) => (
+            {displayedAccounts.map((account) => (
               <div
                 key={account.id}
                 className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
@@ -372,8 +400,8 @@ export default function VaultAccounts() {
                           {account.site_name}
                         </h3>
                         <PasswordStrengthBar
-                          score={account.password_strength}
                           label={account.password_strength_label}
+                          score={account.password_strength}
                         />
                         {viewingId === account.id && (
                           <p className="text-sm font-mono text-gray-300 mt-0.5">
@@ -500,7 +528,10 @@ export default function VaultAccounts() {
                       <FiZap className="w-4 h-4" />
                     </button>
                   </div>
-                  <PasswordStrength password={addForm.password} />
+                  <PasswordStrengthBar
+                    label={evaluatePasswordStrength(addForm.password).label}
+                    score={evaluatePasswordStrength(addForm.password).score}
+                  />
                 </div>
                 <div className="flex gap-3 pt-2">
                   <button

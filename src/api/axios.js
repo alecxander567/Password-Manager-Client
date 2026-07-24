@@ -42,6 +42,11 @@ axiosInstance.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
+    // If it's a 204 response with no content, it's a successful deletion
+    if (error.response?.status === 204) {
+      return Promise.resolve(error.response);
+    }
+
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
@@ -58,8 +63,9 @@ axiosInstance.interceptors.response.use(
       const refreshToken = localStorage.getItem("refresh_token");
       if (!refreshToken) {
         isRefreshing = false;
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
+        // Clear everything and redirect to login
+        localStorage.clear();
+        sessionStorage.clear();
         window.location.href = "/login";
         return Promise.reject(error);
       }
@@ -77,8 +83,9 @@ axiosInstance.interceptors.response.use(
         return axiosInstance(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
+        // Clear everything on refresh failure
+        localStorage.clear();
+        sessionStorage.clear();
         window.location.href = "/login";
         return Promise.reject(refreshError);
       } finally {

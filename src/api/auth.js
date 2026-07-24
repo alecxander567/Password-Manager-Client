@@ -9,9 +9,8 @@ export const loginUser = (credentials) => {
 };
 
 export const logoutUser = () => {
-  return axiosInstance.post("/api/users/logout/", {
-    refresh: localStorage.getItem("refresh_token"),
-  });
+  const refreshToken = localStorage.getItem("refresh_token");
+  return axiosInstance.post("/api/users/logout/", { refresh: refreshToken });
 };
 
 export const refreshToken = (refresh) => {
@@ -22,16 +21,16 @@ export const getUserProfile = () => {
   return axiosInstance.get("/api/users/profile/");
 };
 
-export const updateUserProfile = (formData) => {
-  return axiosInstance.patch("/api/users/profile/", formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+export const updateUserProfile = (data) => {
+  return axiosInstance.patch("/api/users/profile/", data);
 };
 
 export const changePassword = (data) => {
   return axiosInstance.post("/api/users/change-password/", data);
 };
 
-export const deleteAccount = () => {
-  return axiosInstance.delete("/api/users/delete-account/");
+export const deleteAccount = (refreshToken) => {
+  return axiosInstance.delete("/api/users/delete-account/", {
+    data: { refresh: refreshToken },
+  });
 };

@@ -1,3 +1,4 @@
+// components/PasswordStrength.jsx
 import { usePasswordStrength } from "../hooks/usePasswordStrength";
 import { STRENGTH_COLORS, strengthLabel } from "../utils/passwordStrength";
 
@@ -19,7 +20,7 @@ export default function PasswordStrength({ password }) {
       <div className="h-1.5 rounded-full bg-gray-700 overflow-hidden">
         <div
           className={`h-full transition-all ${STRENGTH_COLORS[strength] || "bg-red-500"}`}
-          style={{ width: `${score}%` }}
+          style={{ width: `${Math.min(score, 100)}%` }}
         />
       </div>
       {feedback.length > 0 && (

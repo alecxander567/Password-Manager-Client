@@ -1,9 +1,15 @@
 import { useState, useEffect, useCallback } from "react";
-import { loginUser, registerUser, logoutUser, getUserProfile } from "../api/auth";
+import {
+  loginUser,
+  registerUser,
+  logoutUser,
+  getUserProfile,
+} from "../api/auth";
 import { AuthContext } from "./AuthContext";
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  // If there's no token, we're never "loading" a session.
   const [loading, setLoading] = useState(
     () => !!localStorage.getItem("access_token"),
   );
@@ -11,18 +17,29 @@ export function AuthProvider({ children }) {
   // Restore session from localStorage on mount
   useEffect(() => {
     const token = localStorage.getItem("access_token");
-    if (!token) return;
+    if (!token) {
+      return;
+    }
+
+    let cancelled = false;
 
     getUserProfile()
       .then((res) => {
-        setUser(res.data);
+        if (!cancelled) setUser(res.data);
       })
       .catch(() => {
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
-        setUser(null);
+        // If token is invalid, clear everything
+        localStorage.clear();
+        sessionStorage.clear();
+        if (!cancelled) setUser(null);
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const login = useCallback(async (email, password) => {
@@ -47,21 +64,59 @@ export function AuthProvider({ children }) {
     return profileRes.data;
   }, []);
 
-  const logout = useCallback(async () => {
+  const logout = useCallback(async (clearAll = true) => {
     try {
-      await logoutUser();
-    } catch {
-      // even if the request fails, clear local state
+      const refreshToken = localStorage.getItem("refresh_token");
+      if (refreshToken) {
+        try {
+          await logoutUser();
+        } catch (err) {
+          // Ignore logout API errors
+          console.log("Logout API error (ignored):", err);
+        }
+      }
+    } catch (error) {
+      console.log("Logout error (ignored):", error);
+    } finally {
+      if (clearAll) {
+        // Clear ALL local storage and session storage
+        localStorage.clear();
+        sessionStorage.clear();
+
+        // Clear any cookies
+        document.cookie.split(";").forEach((c) => {
+          document.cookie = c
+            .replace(/^ +/, "")
+            .replace(
+              /=.*/,
+              "=;expires=" + new Date().toUTCString() + ";path=/",
+            );
+        });
+      } else {
+        // Just clear the auth tokens, leave other stored data alone
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+      }
+
+      setUser(null);
     }
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
-    setUser(null);
   }, []);
 
   const refreshProfile = useCallback(async () => {
-    const res = await getUserProfile();
-    setUser(res.data);
-    return res.data;
+    try {
+      const res = await getUserProfile();
+      setUser(res.data);
+      return res.data;
+    } catch (error) {
+      console.error("Failed to refresh profile:", error);
+      // If we can't refresh the profile, the token might be invalid
+      if (error.response?.status === 401) {
+        localStorage.clear();
+        sessionStorage.clear();
+        setUser(null);
+      }
+      return null;
+    }
   }, []);
 
   return (
