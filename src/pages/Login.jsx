@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FiLock } from "react-icons/fi";
 import { useAuth } from "../hooks/AuthContext";
@@ -6,18 +6,23 @@ import { useAuth } from "../hooks/AuthContext";
 export default function Login() {
   const { login, user } = useAuth();
   const navigate = useNavigate();
+  const hasCleared = useRef(false); // Track if we've already cleared
 
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  // Clear any existing session when landing on login page
+  // Clear any existing session ONLY ONCE when component mounts
   useEffect(() => {
-    // Clear all storage to ensure a clean login state
-    localStorage.clear();
-    sessionStorage.clear();
+    if (!hasCleared.current) {
+      hasCleared.current = true;
+      localStorage.clear();
+      sessionStorage.clear();
+    }
+  }, []); // Empty dependency array = only runs once
 
-    // If user is already logged in, redirect to dashboard
+  // Redirect if user is already logged in
+  useEffect(() => {
     if (user) {
       navigate("/dashboard", { replace: true });
     }
@@ -25,7 +30,6 @@ export default function Login() {
 
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-    // Clear error when user starts typing
     if (error) setError("");
   };
 
@@ -36,8 +40,8 @@ export default function Login() {
 
     try {
       await login(form.email, form.password);
-      // Use replace to prevent going back to login page
-      navigate("/dashboard", { replace: true });
+      // Don't navigate here - let the useEffect handle it
+      // The redirect will happen when 'user' is set
     } catch (err) {
       const msg =
         err.response?.data?.detail ||
