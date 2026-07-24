@@ -268,7 +268,7 @@ export default function VaultAccounts() {
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl font-bold text-white">Accounts</h1>
             <p className="text-gray-400 text-sm mt-1">
@@ -281,7 +281,7 @@ export default function VaultAccounts() {
               refreshActivity();
               setShowAdd(true);
             }}
-            className="flex items-center gap-2 px-5 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-medium rounded-lg transition cursor-pointer">
+            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-medium rounded-lg transition cursor-pointer w-full sm:w-auto">
             <FiPlus className="w-4 h-4" />
             Add Account
           </button>
@@ -291,7 +291,7 @@ export default function VaultAccounts() {
         {!loading && accounts.length > 0 && (
           <div className="flex flex-col sm:flex-row gap-3 mb-6">
             {/* Search */}
-            <div className="relative flex-1">
+            <div className="relative flex-1 min-w-0">
               <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
               <input
                 type="text"
@@ -302,23 +302,26 @@ export default function VaultAccounts() {
               />
             </div>
 
-            {/* Strength Filter */}
-            <PasswordStrengthFilter
-              value={strengthFilter}
-              onChange={setStrengthFilter}
-              className="flex-shrink-0"
-            />
+            {/* Filter + sort row (stay side by side even on mobile) */}
+            <div className="flex gap-3">
+              {/* Strength Filter */}
+              <PasswordStrengthFilter
+                value={strengthFilter}
+                onChange={setStrengthFilter}
+                className="flex-1 sm:flex-shrink-0"
+              />
 
-            {/* Sort order */}
-            <div className="relative flex-shrink-0">
-              <select
-                value={sortOrder}
-                onChange={(e) => setSortOrder(e.target.value)}
-                className="appearance-none w-full sm:w-auto px-4 py-2.5 pr-10 bg-gray-900 border border-gray-800 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition cursor-pointer">
-                <option value="asc">A → Z</option>
-                <option value="desc">Z → A</option>
-              </select>
-              <FiChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+              {/* Sort order */}
+              <div className="relative flex-1 sm:flex-shrink-0">
+                <select
+                  value={sortOrder}
+                  onChange={(e) => setSortOrder(e.target.value)}
+                  className="appearance-none w-full sm:w-auto px-4 py-2.5 pr-10 bg-gray-900 border border-gray-800 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition cursor-pointer">
+                  <option value="asc">A → Z</option>
+                  <option value="desc">Z → A</option>
+                </select>
+                <FiChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+              </div>
             </div>
           </div>
         )}
@@ -339,7 +342,7 @@ export default function VaultAccounts() {
 
         {/* Empty state – no accounts at all */}
         {!loading && accounts.length === 0 && (
-          <div className="text-center py-16">
+          <div className="text-center py-16 px-4">
             <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-800 border border-gray-700 flex items-center justify-center">
               <FiKey className="w-8 h-8 text-gray-500" />
             </div>
@@ -362,7 +365,7 @@ export default function VaultAccounts() {
 
         {/* Empty state – no search results */}
         {!loading && accounts.length > 0 && displayedAccounts.length === 0 && (
-          <div className="text-center py-16">
+          <div className="text-center py-16 px-4">
             <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-800 border border-gray-700 flex items-center justify-center">
               <FiSearch className="w-8 h-8 text-gray-500" />
             </div>
@@ -390,13 +393,14 @@ export default function VaultAccounts() {
                 key={account.id}
                 className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
                 <div className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-cyan-600/10 border border-cyan-800/30 flex items-center justify-center">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    {/* Account info */}
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 shrink-0 rounded-lg bg-cyan-600/10 border border-cyan-800/30 flex items-center justify-center">
                         <FiLock className="w-5 h-5 text-cyan-400" />
                       </div>
-                      <div>
-                        <h3 className="text-white font-medium">
+                      <div className="min-w-0">
+                        <h3 className="text-white font-medium truncate">
                           {account.site_name}
                         </h3>
                         <PasswordStrengthBar
@@ -404,7 +408,7 @@ export default function VaultAccounts() {
                           score={account.password_strength}
                         />
                         {viewingId === account.id && (
-                          <p className="text-sm font-mono text-gray-300 mt-0.5">
+                          <p className="text-sm font-mono text-gray-300 mt-0.5 break-all">
                             {revealedId === account.id ?
                               decryptedPassword
                             : "••••••••"}
@@ -412,7 +416,9 @@ export default function VaultAccounts() {
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap sm:shrink-0 self-end sm:self-auto">
                       {viewingId === account.id && (
                         <>
                           <button
@@ -470,8 +476,8 @@ export default function VaultAccounts() {
 
         {/* Add Account Modal */}
         {showAdd && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 w-full max-w-md mx-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 w-full max-w-md">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-semibold text-white">
                   Add Account
@@ -518,12 +524,12 @@ export default function VaultAccounts() {
                       }
                       required
                       placeholder="Enter the password"
-                      className="flex-1 px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition"
+                      className="flex-1 min-w-0 px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition"
                     />
                     <button
                       type="button"
                       onClick={() => setShowGenerator(true)}
-                      className="px-3 py-2.5 bg-yellow-600 hover:bg-yellow-500 text-white text-sm font-medium rounded-lg transition cursor-pointer whitespace-nowrap"
+                      className="px-3 py-2.5 bg-yellow-600 hover:bg-yellow-500 text-white text-sm font-medium rounded-lg transition cursor-pointer whitespace-nowrap shrink-0"
                       title="Generate a secure password">
                       <FiZap className="w-4 h-4" />
                     </button>
@@ -533,18 +539,18 @@ export default function VaultAccounts() {
                     score={evaluatePasswordStrength(addForm.password).score}
                   />
                 </div>
-                <div className="flex gap-3 pt-2">
-                  <button
-                    type="submit"
-                    disabled={adding}
-                    className="flex-1 py-2.5 bg-cyan-600 hover:bg-cyan-500 disabled:bg-cyan-800 disabled:cursor-not-allowed text-white font-medium rounded-lg transition cursor-pointer">
-                    {adding ? "Adding …" : "Add Account"}
-                  </button>
+                <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
                   <button
                     type="button"
                     onClick={() => setShowAdd(false)}
                     className="px-5 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium rounded-lg transition cursor-pointer">
                     Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={adding}
+                    className="flex-1 py-2.5 bg-cyan-600 hover:bg-cyan-500 disabled:bg-cyan-800 disabled:cursor-not-allowed text-white font-medium rounded-lg transition cursor-pointer">
+                    {adding ? "Adding …" : "Add Account"}
                   </button>
                 </div>
               </form>
@@ -595,8 +601,8 @@ export default function VaultAccounts() {
 
         {/* Re-prompt modal */}
         {repromptMode && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 w-full max-w-md mx-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 w-full max-w-md">
               <div className="flex items-center gap-3 mb-6">
                 <FiLock className="w-5 h-5 text-cyan-400" />
                 <h2 className="text-lg font-semibold text-white">
@@ -623,12 +629,7 @@ export default function VaultAccounts() {
                   placeholder="Master password"
                   className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition"
                 />
-                <div className="flex gap-3">
-                  <button
-                    type="submit"
-                    className="flex-1 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white font-medium rounded-lg transition cursor-pointer">
-                    Confirm
-                  </button>
+                <div className="flex flex-col-reverse sm:flex-row gap-3">
                   <button
                     type="button"
                     onClick={() => {
@@ -637,6 +638,11 @@ export default function VaultAccounts() {
                     }}
                     className="px-5 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium rounded-lg transition cursor-pointer">
                     Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white font-medium rounded-lg transition cursor-pointer">
+                    Confirm
                   </button>
                 </div>
               </form>
