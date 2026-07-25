@@ -9,7 +9,7 @@ import {
   FiChevronDown,
   FiSearch,
   FiHeart,
-  FiFingerprint,
+  FiShield,
 } from "react-icons/fi";
 import {
   listVaults,
@@ -399,7 +399,7 @@ export default function Vaults() {
                         : "Biometric"}
                       </span>
                     </button>
-                  ) : (
+                    ) : (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -407,7 +407,7 @@ export default function Vaults() {
                       }}
                       className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm rounded-lg transition cursor-pointer"
                       title="Enable biometric unlock">
-                      <FiFingerprint className="w-4 h-4" />
+                      <FiShield className="w-4 h-4" />
                       <span className="hidden sm:inline">Enable Biometric</span>
                     </button>
                   )}
