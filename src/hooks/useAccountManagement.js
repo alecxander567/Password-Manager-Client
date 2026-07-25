@@ -21,7 +21,7 @@ function bufToBase64Url(buf) {
     .replace(/=+$/, "");
 }
 
-export function useAccountManagement(vaultId, onSuccess) {
+export function useAccountManagement(vaultId, onSuccess, onError) {
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({ site_name: "", password: "" });
   const [editing, setEditing] = useState(false);
@@ -96,7 +96,12 @@ export function useAccountManagement(vaultId, onSuccess) {
 
       return true;
     } catch (err) {
-      console.error("WebAuthn authentication error:", err);
+      const errorMessage = "WebAuthn authentication error: " + (err.message || "Authentication failed. Please try again.");
+      if (onError) {
+        onError(errorMessage);
+      } else {
+        alert(errorMessage);
+      }
 
       if (err.response?.status === 400) {
         throw new Error(
@@ -133,16 +138,21 @@ export function useAccountManagement(vaultId, onSuccess) {
         // Perform WebAuthn authentication
         await handleWebAuthnAuthentication();
 
-        // If successful, proceed with edit
-        setEditingId(account.id);
-        setEditForm({ site_name: account.site_name, password: "" });
-      } catch (err) {
-        console.error("Edit click authentication failed:", err);
-        setEditError(err.message || "Authentication failed. Please try again.");
+      // If successful, proceed with edit
+      setEditingId(account.id);
+      setEditForm({ site_name: account.site_name, password: "" });
+    } catch (err) {
+      const errorMessage = "Edit click authentication failed: " + (err.message || "Authentication failed. Please try again.");
+      if (onError) {
+        onError(errorMessage);
+      } else {
+        alert(errorMessage);
       }
-    },
-    [handleWebAuthnAuthentication],
-  );
+      setEditError(err.message || "Authentication failed. Please try again.");
+    }
+  },
+  [handleWebAuthnAuthentication, onError],
+);
 
   const handleUpdateAccount = useCallback(
     async (vaultKey, refreshActivity) => {
@@ -203,17 +213,22 @@ export function useAccountManagement(vaultId, onSuccess) {
         // Perform WebAuthn authentication
         await handleWebAuthnAuthentication();
 
-        // If successful, proceed with delete
-        setDeleteId(accountId);
-      } catch (err) {
-        console.error("Delete click authentication failed:", err);
-        setDeleteError(
-          err.message || "Authentication failed. Please try again.",
-        );
+      // If successful, proceed with delete
+      setDeleteId(accountId);
+    } catch (err) {
+      const errorMessage = "Delete click authentication failed: " + (err.message || "Authentication failed. Please try again.");
+      if (onError) {
+        onError(errorMessage);
+      } else {
+        alert(errorMessage);
       }
-    },
-    [handleWebAuthnAuthentication],
-  );
+      setDeleteError(
+        err.message || "Authentication failed. Please try again.",
+      );
+    }
+  },
+  [handleWebAuthnAuthentication, onError],
+);
 
   const handleDeleteConfirm = useCallback(
     async (refreshActivity) => {

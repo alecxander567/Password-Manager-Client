@@ -225,7 +225,11 @@ export default function VaultAccounts() {
     }
   };
 
-  const accountManagement = useAccountManagement(vaultId, loadAccounts);
+  const accountManagement = useAccountManagement(
+    vaultId,
+    loadAccounts,
+    (errorMsg) => setError(errorMsg),
+  );
 
   // Apply search and sort to filtered accounts
   const displayedAccounts = useMemo(() => {
