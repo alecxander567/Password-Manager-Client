@@ -450,8 +450,9 @@ export default function VaultAccounts() {
                       {viewingId !== account.id && (
                         <button
                           onClick={() => handleViewPassword(account.id)}
-                          className="px-3 py-1.5 text-sm bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg transition cursor-pointer">
-                          View
+                          className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition cursor-pointer"
+                          title="View password">
+                          <FiEye className="w-4 h-4" />
                         </button>
                       )}
                       <button

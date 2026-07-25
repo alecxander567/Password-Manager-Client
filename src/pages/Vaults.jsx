@@ -9,6 +9,7 @@ import {
   FiChevronDown,
   FiSearch,
   FiHeart,
+  FiFingerprint,
 } from "react-icons/fi";
 import {
   listVaults,
@@ -23,6 +24,7 @@ import useFavorites, { normalizeFavoriteId } from "../hooks/useFavorites";
 import AlertMessage from "../components/AlertMessage";
 import LoadingSpinner from "../components/LoadingSpinner";
 import TopBar from "../components/TopBar";
+import EnableBiometric from "../components/EnableBiometric";
 
 function bufToBase64Url(buf) {
   const bytes = new Uint8Array(buf);
@@ -56,6 +58,7 @@ export default function Vaults() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [unlockingVaultId, setUnlockingVaultId] = useState(null);
+  const [enablingBiometricVaultId, setEnablingBiometricVaultId] = useState(null);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -381,7 +384,7 @@ export default function Vaults() {
                     />
                   </button>
 
-                  {vault.biometric_enabled && (
+                  {vault.biometric_enabled ? (
                     <button
                       onClick={(e) => handleBiometricUnlock(vault.id, e)}
                       disabled={unlockingVaultId === vault.id}
@@ -396,6 +399,17 @@ export default function Vaults() {
                         : "Biometric"}
                       </span>
                     </button>
+                  ) : (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEnablingBiometricVaultId(vault.id);
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm rounded-lg transition cursor-pointer"
+                      title="Enable biometric unlock">
+                      <FiFingerprint className="w-4 h-4" />
+                      <span className="hidden sm:inline">Enable Biometric</span>
+                    </button>
                   )}
 
                   <button
@@ -409,6 +423,37 @@ export default function Vaults() {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Enable Biometric Modal */}
+        {enablingBiometricVaultId && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 w-full max-w-md">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-semibold text-white">
+                  Enable Biometric Unlock
+                </h2>
+                <button
+                  onClick={() => setEnablingBiometricVaultId(null)}
+                  className="text-gray-400 hover:text-white transition cursor-pointer">
+                  ✕
+                </button>
+              </div>
+              <EnableBiometric
+                vaultId={enablingBiometricVaultId}
+                onSuccess={(message) => {
+                  setSuccess(message);
+                  setEnablingBiometricVaultId(null);
+                  // Refresh vaults list to update biometric_enabled status
+                  listVaults().then(res => setVaults(res.data));
+                }}
+                onError={(errorMsg) => {
+                  setError(errorMsg);
+                }}
+                onCancel={() => setEnablingBiometricVaultId(null)}
+              />
+            </div>
           </div>
         )}
       </div>
