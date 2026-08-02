@@ -75,12 +75,9 @@ export default function VaultAccounts() {
   const loadAccounts = useCallback(async () => {
     setLoading(true);
     try {
-      console.log("Loading accounts for vault:", vaultId);
       const res = await listAccounts(vaultId);
-      console.log("Accounts loaded:", res.data);
       setAccounts(res.data);
     } catch (err) {
-      console.error("Failed to load accounts:", err);
       const msg = err.response?.data?.detail || "Failed to load accounts.";
       setError(msg);
     } finally {
@@ -227,7 +224,14 @@ export default function VaultAccounts() {
 
   const accountManagement = useAccountManagement(
     vaultId,
-    loadAccounts,
+    () => {
+      loadAccounts();
+      // Clear any previously revealed password so stale plaintext
+      // doesn't linger on screen after an edit — user re-views to see the new one.
+      setViewingId(null);
+      setRevealedId(null);
+      setDecryptedPassword("");
+    },
     (errorMsg) => setError(errorMsg),
   );
 
