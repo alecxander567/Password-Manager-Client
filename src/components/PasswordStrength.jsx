@@ -1,4 +1,3 @@
-// components/PasswordStrength.jsx
 import { usePasswordStrength } from "../hooks/usePasswordStrength";
 import { STRENGTH_COLORS, strengthLabel } from "../utils/passwordStrength";
 
@@ -7,7 +6,12 @@ export default function PasswordStrength({ password }) {
 
   if (!password) return null;
 
-  const { score, strength, feedback } = result;
+  // evaluatePasswordStrength() returns { score, label } — there is no
+  // `strength` or `feedback` field. Map label -> strength here, and
+  // default feedback to [] since the client-side evaluator doesn't
+  // produce any (only a server-side check would).
+  const { score = 0, label, feedback = [] } = result || {};
+  const strength = label || "very_weak";
 
   return (
     <div className="mt-2" aria-live="polite">

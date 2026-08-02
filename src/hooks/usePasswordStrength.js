@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { evaluatePasswordStrength } from "../utils/passwordStrength";
 import { checkPasswordStrength } from "../api/passwordStrength";
 
@@ -12,7 +12,10 @@ import { checkPasswordStrength } from "../api/passwordStrength";
  * @returns {{ result: object, loading: boolean, error: string|null, checkServer: function }}
  */
 export function usePasswordStrength(password = "", { useServer = false } = {}) {
-  const [serverResult, setServerResult] = useState(null);
+  // Tag the server result with the password it was computed for, so a
+  // stale result from a previous password is never accidentally shown —
+  // no need to actively "reset" it in an effect.
+  const [serverResult, setServerResult] = useState(null); // { forPassword, data } | null
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -21,36 +24,40 @@ export function usePasswordStrength(password = "", { useServer = false } = {}) {
     [password],
   );
 
-  const result = serverResult || clientResult;
+  const result = useMemo(() => {
+    if (serverResult && serverResult.forPassword === password) {
+      return serverResult.data;
+    }
+    return clientResult;
+  }, [serverResult, password, clientResult]);
 
   const checkServer = useCallback(async () => {
     if (!password) return;
+    const forPassword = password;
     setLoading(true);
     setError(null);
     try {
       const res = await checkPasswordStrength(password);
-      setServerResult(res.data);
+      setServerResult({ forPassword, data: res.data });
     } catch (err) {
       const msg =
         err.response?.data?.error || "Failed to check password strength.";
       setError(msg);
-      // Fall back to client result
-      setServerResult(null);
     } finally {
       setLoading(false);
     }
   }, [password]);
 
-  // Auto-check server side if enabled
-  const [autoChecked, setAutoChecked] = useState(false);
-  if (useServer && password && !autoChecked && !loading) {
-    checkServer();
-    setAutoChecked(true);
-  }
-  if (!password && autoChecked) {
-    setAutoChecked(false);
-    setServerResult(null);
-  }
+  // Auto-check server side if enabled.
+  useEffect(() => {
+    if (!useServer || !password) return;
+
+    const id = setTimeout(() => {
+      checkServer();
+    }, 0);
+
+    return () => clearTimeout(id);
+  }, [useServer, password, checkServer]);
 
   return { result, loading, error, checkServer };
 }
